@@ -22,13 +22,22 @@ private:
     int mutatk;
     int muthp;
     int maxhp;
+
+
+    
 protected:
     int gold;
     int floor;
+    
+        
 public:
     player(std::vector<int> p, char sym, char t, std::string i,int hp, int atk, int def,int max,int goldn,int floor);
     ~player();
     int getfloor();
+    std::vector<enemy*> attackers;
+    int num_attackers;
+    int get_num_attk();
+    void num_attk_minus();
     void mutatefloor(int flor);
     int getgold();
     void mutategold(int gld);
@@ -36,6 +45,9 @@ public:
     void mutatemutatk(int atk);
     void mutatemuthp(int hp);
     void attack(enemy *e);
+    void attacknotification(enemy *e);
+    void removenotification(enemy *e);
+    void movePos(std::string direction);
     };
 
 

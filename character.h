@@ -22,14 +22,14 @@ private:
 public:
     character(std::vector <int> p, char sym, char t, std::string i,int hp, int atk, int def,int maxhp);
     ~character();
-    void mutateatk(int atk);
-    void mutatedef(int def);
-    void mutatehp(int hp);
+    void mutateatk(int a);
+    void mutatedef(int d);
+    void mutatehp(int h);
     int getatk();
     int getdef();
     int gethp();
     bool slain();
-
+    bool withinradius(character *p);   
 };
 #endif /* defined(__ChamberCrawler3000__character__) */
 

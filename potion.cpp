@@ -48,3 +48,15 @@ void potion::usepotion(player *p){
         p->mutatehp(a);
     }
 }
+
+bool potion::potionlocation(std::vector<int> loc){
+    int x1 = loc.at(0);
+    int y1 = loc.at(1);
+    std::vector <int> p1 = this->getpoint();
+    if (x1 == p1.at(0) && y1 == p1.at(1)){
+        return true;
+    }
+    else{
+        return false;
+    }
+}

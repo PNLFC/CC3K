@@ -1,8 +1,8 @@
 CXX = g++
-CXXFLAGS = -Wall -MMD
+CXXFLAGS = -std=c++11 -Wall -MMD -g
 EXEC = cc3k 
 MAINOBJ = main.o
-FLOOROBJ = floor.o chamber.o
+FLOOROBJ = grid.o chamber.o
 CHAROBJ = character.o thing.o
 PLAYEROBJ = player.o human.o elf.o orc.o dwarf.o
 ENEMYOBJ = enemy.o dragon.o merchant.o phoenix.o goblin.o werewolf.o vampire.o troll.o

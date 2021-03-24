@@ -7,7 +7,7 @@
 //
 
 
-#include "floor.h"
+#include "grid.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -44,48 +44,66 @@ int main(int argc, char *argv[]) {
         srand(time(NULL));
     }
     else{
-        file = "cc3kfloor.txt";
+        file = "map.txt";
     }
     srand(static_cast<unsigned int> (time(NULL)));  //  using the time seed from srand
     passage();
-    floor *grid = new floor(file);
-    char race = grid->selectplayer();
-    grid->generateboard(race,file);
-    grid->print();
+    grid *floor = new grid(file);
+    char race = floor->selectplayer();
+    floor->generateboard(race,file);
+    floor->print();
     
-    string comm;
-    cin >> comm;
+    string d;
+    cin >> d;
     while(!cin.eof()) {
-        if (comm == "q") {
+        if (d == "q") {
             quit();
             break;
         }
-        string d = comm;
-        if(d[0] == 'a' || d[0] == 'u') {
+        if(d[0] == 'a' ){
             d.erase(0, 1);
+            floor->attackbyplayer();
         }
+        if(d[0] == 'u'){
+            d.erase(0, 1);
+            cout << "Enter direction" << endl;
+            cin >> d;
+            floor->potionpick(d);
+        }
+        //player moving through floor    
         while (!(d == "no" || d == "so" || d == "ea" || d == "we"
                  || d == "ne" || d == "se" || d == "nw" || d == "sw" || d == "r")) {
             cin.clear();
             cout << "Enter a valid command: ";
-            cin >> comm;
-            d = comm;
-            if(d[0] == 'a' || d[0] == 'u') {
+            cin >> d;
+            if(d[0] == 'a' ) {
                 d.erase(0, 1);
+                cout << "Enter direction" << endl;
+                floor->attackbyplayer();
+                d.erase(0,2);
+            }
+            else if (d[0] == 'u'){
+                d.erase(0, 1);
+                cout << "Enter direction" << endl;
+                cin >> d;
+                floor->potionpick(d);
+                d.erase(0,2);
             }
         }
-        grid->moveplayer(d);
-        cout << "player moved" << endl;
-        grid->moveenemies();
+        if (floor->isValid(d)){
+            floor->moveplayer(d);
+            cout << "player moved" << endl;
+            floor->moveenemies();
+        }
         
-        if(grid->won()) {
+        if(floor->won()) {
             win();
             break;
         }
-        grid->print();
-        cin >> comm;
+        floor->print();
+        cin >> d;
     }
     
-    delete grid;
+    delete floor;
     return 0;
 }

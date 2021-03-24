@@ -9,4 +9,4 @@
 #include "NH.h"
 #include "treasure.h"
 
-NH::NH(std::vector<int> p):treasure(p,'G', 1, 'g', "NH", true){}
+NH::NH(std::vector<int> p):treasure(p,'G', 1, 'g', "NH", false){}

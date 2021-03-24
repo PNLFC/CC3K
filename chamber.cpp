@@ -9,242 +9,121 @@
 #include <cstdlib>
 #include <time.h>
 #include <cstdio>
-#include <vector>
 #include "chamber.h"
-#include "floor.h"
-#include "human.h"
-#include "elf.h"
-#include "orc.h"
-#include "dwarf.h"
-#include "player.h"
+#include <iostream>
+#include <memory>
+#include <utility>
 
-chamber::chamber(int i, floor *flood) : i(i), f(flood)
+using namespace std;
+
+chamber::chamber(int id, std::vector<std::vector<char> >& theDisplay): id(id), theDisplay(theDisplay) 
 {
-    std::vector<int> temp;
-    switch (i)
-    { //i used to construct different sets of chambers in the floor
-    case 0:
-        temp.push_back(4);
-        temp.push_back(3);
-        firstpoint = temp;
-        width = 26;
-        height = 4;
-        break;
-    case 1:
-        temp.push_back(4);
-        temp.push_back(15);
-        firstpoint = temp;
-        width = 21;
-        height = 7;
-        break;
-    case 2:
-        temp.push_back(38);
-        temp.push_back(10);
-        firstpoint = temp;
-        width = 12;
-        height = 3;
-        break;
-    case 3:
-        temp.push_back(39);
-        temp.push_back(3);
-        firstpoint = temp;
-        width = 37;
-        height = 10;
-        break;
-    case 4:
-        temp.push_back(38);
-        temp.push_back(16);
-        firstpoint = temp;
-        width = 39;
-        height = 6;
-        break;
+    //std::move is used for unique_ptr Floor here
+    if (id == 0) { //top left
+         topRow = 3;
+         topCol = 3;
+         rowLen = 4;
+         colLen = 26;
     }
-    tile = new bool *[height];
-    for (int x = 0; x < height; x++)
-    {
-        tile[x] = new bool[width];
+    if (id == 1) { //top right(special case)
+        topRow = 3;
+        topCol = 39;
+        rowLen = 10;
+        colLen = 37;
     }
+    if (id == 2) { //middle
+        topRow = 10;
+        topCol = 38;
+        rowLen = 3;
+        colLen = 12;
+    }
+    if (id == 3) { //bottom left
+        topRow = 15;
+        topCol = 4;
+        rowLen = 7;
+        colLen = 21;
+    }
+    if (id == 4) { //bottom right(special case)
+        topRow = 16;
+        topCol = 37;
+        rowLen = 6;
+        colLen = 39;
+    }
+}
 
-    //make the whole 2d array values be true
-    for (int x = 0; x < height; x++)
-    {
-        for (int y = 0; y < width; y++)
-        {
-            tile[x][y] = true;
+chamber::~chamber() {}
+
+int chamber::getid() {
+    return id;
+}
+
+int chamber::gettopRow() {
+    return topRow;
+}
+
+int chamber::gettopCol(){
+    return topCol;
+}
+
+int chamber::getrowLen() {
+    return rowLen;
+}
+
+int chamber::getcolLen(){
+    return colLen;
+}
+
+bool chamber::isValidTile(int row,int col) {
+    cout << "inside validTile" << endl;
+    cout << theDisplay[0][0] << endl;
+    if (theDisplay[row][col] == '.' ) return true;
+    else return false;    
+}
+
+vector<int> chamber::generatePos(const char symbol) {
+    cout << "inside generate Position in chamber" << endl;
+    vector<int> cor;
+    int currRow, currCol;
+    while (true) {
+      currRow = rand() % rowLen;
+      currCol = rand() % colLen;
+      cout << "inside loop" << currRow + topRow << topCol + currCol << id << endl;
+
+        if (isValidTile(topRow+currRow, topCol+currCol)) break;
+    }
+    cout << "found valid tile" << endl;
+    theDisplay[topRow+currRow][topCol+currCol] = symbol;
+    cor.push_back(topRow+currRow);
+    cor.push_back(topCol+currCol);
+    return cor;
+}
+
+bool chamber::withinRange(const int row, const int col) {
+    if (id != 1 && id != 4) {
+        if ((row >= topRow && row <= topRow+rowLen) && (col >= topCol && row <= topCol+colLen)) return true;
+        else return false;
+    } else if (id == 2) {
+        if (col <= topCol+1) {
+            if (row < topRow+23) return true;
+            else return false;
+        } else if (col == topCol+2) {
+            if (row < topRow+30) return true;
+            else return false;
+        } else if (col == topCol+3) {
+            if (row < topRow+34) return true;
+            else return false;
+        }else{
+            if (col <= topCol+10 && (row > topRow+23 && row < 37)) return true;
+            else return false;
+        }
+    } else {
+        if (col <= topCol+2) {
+            if (row > topRow+28 && row < topRow+40) return true;
+            else return false;
+        } else  {
+            if (col <= topCol+5 &&(row >= topRow && row < topRow+40)) return true;
+            else return false;
         }
     }
-
-    //reshapen the 2d array so that it takes the shapes of the
-    //actual chambers through indicating false values for all non chamber tiles
-    //involved
-    switch (i)
-    {
-    case 3:
-        for (int y = 22; y < width; y++)
-        {
-            tile[0][y] = false;
-        }
-
-        for (int y = 22; y < width; y++)
-        {
-            tile[1][y] = false;
-        }
-        for (int y = 30; y < width; y++)
-        {
-            tile[2][y] = false;
-        }
-        for (int y = 33; y < width; y++)
-        {
-            tile[3][y] = false;
-        }
-        for (int x = 4; x < 10; x++)
-        {
-            for (int y = 0; y < 22; y++)
-            {
-                tile[x][y] = false;
-            }
-        }
-        break;
-    case 4:
-        for (int x = 0; x < 3; x++)
-        {
-            for (int y = 0; y < 28; y++)
-            {
-                tile[x][y] = false;
-            }
-        }
-        break;
-    }
 }
 
-chamber::~chamber()
-{
-    for (int i = 0; i < height; i++)
-    {
-        delete[] tile[i];
-    }
-    delete[] tile;
-}
-
-int chamber::getfirstx()
-{
-    return firstpoint.at(0);
-}
-
-int chamber::getfirsty()
-{
-    return firstpoint.at(1);
-}
-
-std::vector<int> chamber::getfirstpoint()
-{
-    return firstpoint;
-}
-
-int chamber::getwidth()
-{
-    return width;
-}
-
-int chamber::getheight()
-{
-    return height;
-}
-
-bool chamber::validtile(int x, int y)
-{
-    int x1 = this->getfirstx();
-    int y1 = this->getfirsty();
-    if (x < x1 || x > x1 + width - 1 || y < y1 || y > y1 + height - 1)
-    {
-        return false;
-    }
-    cout << tile[y - y1][x - x1] << endl;
-    return tile[y - y1][x - x1];
-}
-
-void chamber::setvalid(int x, int y, bool valid)
-{
-    tile[y][x] = valid;
-}
-
-std::vector<int> chamber::generatepoint()
-{
-    cout << "generation point function entered" << endl;
-    int y = rand() % height;
-    int x = rand() % width;
-    while (this->validtile(x + this->getfirstx(), y + this->getfirsty()) == false)
-    {
-        y = rand() % height;
-        x = rand() % width;
-    }
-    std::vector<int> newpoint;
-    newpoint.push_back(x + this->getfirstx());
-    newpoint.push_back(y + this->getfirsty());
-    cout << "point generated at" << newpoint.at(0) << newpoint.at(1) << endl;
-    setvalid(x, y, false);
-    return newpoint;
-}
-
-player *chamber::generateplayer(char race)
-{
-    std::vector<int> r = this->generatepoint();
-    switch (race)
-    {
-    case 'h':
-        return new human(r);
-    case 'e':
-        return new elf(r);
-    case 'o':
-        return new orc(r);
-    case 'd':
-        return new dwarf(r);
-    default:
-        cerr << "Wrong input";
-        return NULL;
-    }
-}
-
-bool chamber::iswithinchamber(std::vector<int> p)
-{
-    int x = p.at(0);
-    int y = p.at(1);
-    int x1 = this->getfirstx();
-    int y1 = this->getfirsty();
-    if (x < x1 || x > x1 + width - 1 || y < y1 || y > y1 + height - 1)
-    {
-        return false;
-    }
-    return true;
-}
-
-/* int main(int argc, char *argv[])
-{
-    string file = "cc3kfloor.txt";
-    srand(static_cast<unsigned int>(time(NULL)));
-    floor *grid = new floor(file);
-    string i = argv[0];
-    for (int i = 0; i < 5; i++)
-    {
-        grid->chambers[i] = new chamber(i, grid);
-        int height = grid->chambers[i]->getheight();
-        int width = grid->chambers[i]->getwidth();
-        for (int h = 0; h < height; h++)
-        {
-            for (int w = 0; w < width; w++)
-            {
-                if (grid->chambers[i]->validtile(w,h) == true)
-                {
-                    printf("1");
-                }
-                else
-                {
-                    printf("0");
-                }
-            }
-            printf("/n");
-        }
-    }    
-    return 0;
-}
-*/

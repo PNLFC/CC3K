@@ -17,24 +17,24 @@ character::~character(){
     
 }
 
-void character::mutatedef(int def){
-    def += def;
+void character::mutatedef(int d){
+    def += d;
     if (def < 0) {
         def = 0;
         return;
     }
 }
 
-void character::mutateatk(int atk){
-    atk += atk;
+void character::mutateatk(int a){
+    atk += a;
     if(atk < 0){
         atk = 0;
         return;
     }
 }
 
-void character::mutatehp(int hp){
-    hp += hp;
+void character::mutatehp(int h){
+    hp += h;
     if(hp < 0){
         hp = 0;
         return;
@@ -61,3 +61,14 @@ int character::gethp(){
 bool character::slain(){
     return hp == 0;
 }
+
+bool character::withinradius(character *p){
+    std::vector <int> pcoord = p->getpoint();
+    std::vector <int> ecoord = this->getpoint();
+    if (abs(pcoord.at(0)-ecoord.at(0)) <= 1  && abs(pcoord.at(1)-ecoord.at(1))<= 1){
+        return true;
+    }
+    else{
+        return false;
+    }
+}    

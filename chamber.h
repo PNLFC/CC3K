@@ -8,37 +8,31 @@
 
 #ifndef __ChamberCrawler3000__chamber__
 #define __ChamberCrawler3000__chamber__
-
-#include <iostream>
 #include <vector>
-#include <string>
-#include <stdio.h>
 
-class floor;
-class player;
-
-class chamber {
-    int i;
-    std::vector <int> firstpoint;
-    int width, height;
-    bool **tile;
-    floor *f;
+class chamber{
+    int id;
+    int topRow;
+    int topCol;
+    int rowLen;
+    int colLen;
+    std::vector<std::vector<char> >& theDisplay;
     
-    void assignValids();
 public:
-    chamber(int i, floor *flood);
+    
+    chamber(int id, std::vector<std::vector<char> >& theDisplay);
     ~chamber();
-    bool validtile(int x, int y);
-    bool iswithinchamber(std::vector <int> p);
-    void setvalid(int x, int y, bool valid);
-    int getfirstx();
-    int getfirsty();
-    std::vector <int> getfirstpoint();
-    int getwidth();
-    int getheight();
-    std::vector <int> generatepoint();
-    player *generateplayer(char race);
-   
+    
+    int getid();
+    int gettopRow();
+    int gettopCol();
+    int getrowLen();
+    int getcolLen();
+    
+    bool isValidTile(const int row,const int col);
+    std::vector<int> generatePos(const char symbol);
+    bool withinRange(const int row, const int col);
+
 };
 
-#endif /* defined(__ChamberCrawler3000__chamber__) */
+#endif

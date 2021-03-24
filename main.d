@@ -1,1 +1,1 @@
-main.o: main.cpp floor.h
+main.o: main.cpp grid.h

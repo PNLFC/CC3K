@@ -8,4 +8,4 @@
 
 #include "SH.h"
 
-SH::SH(std::vector<int> p):treasure(p,'G', 2, 'g', "SH", true){}
+SH::SH(std::vector<int> p):treasure(p,'G', 2, 'g', "SH", false){}

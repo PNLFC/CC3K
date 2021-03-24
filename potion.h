@@ -19,6 +19,7 @@ public:
     potion(std::vector<int> p, char sym, int mut, char t, std::string i, bool pe);
     ~potion();
     void usepotion(player *p);
+    bool potionlocation(std::vector<int> loc);
 };
 
 
