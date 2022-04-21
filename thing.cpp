@@ -34,7 +34,6 @@ char thing::gettype(){
     return type;
 }
 
-
 std::string thing::getidentity(){
     return identity;
 }

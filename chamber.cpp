@@ -74,24 +74,18 @@ int chamber::getcolLen(){
 }
 
 bool chamber::isValidTile(int row,int col) {
-    cout << "inside validTile" << endl;
-    cout << theDisplay[0][0] << endl;
     if (theDisplay[row][col] == '.' ) return true;
     else return false;    
 }
 
 vector<int> chamber::generatePos(const char symbol) {
-    cout << "inside generate Position in chamber" << endl;
     vector<int> cor;
     int currRow, currCol;
     while (true) {
       currRow = rand() % rowLen;
       currCol = rand() % colLen;
-      cout << "inside loop" << currRow + topRow << topCol + currCol << id << endl;
-
         if (isValidTile(topRow+currRow, topCol+currCol)) break;
     }
-    cout << "found valid tile" << endl;
     theDisplay[topRow+currRow][topCol+currCol] = symbol;
     cor.push_back(topRow+currRow);
     cor.push_back(topCol+currCol);

@@ -127,23 +127,29 @@ void grid::generate_treaslist(){
 }
 
 void grid::removefoe(enemy* e){
-    for (int i = 0; i < 20;i++){
-        vector <int> na = foelist.at(i)->getpoint(); 
+    std::vector<enemy*>::iterator it;
+    for (it = foelist.begin(); it != foelist.end();){
+        vector <int> na = (*it)->getpoint(); 
         vector <int> ee = e->getpoint();
         if (na.at(0) == ee.at(0) && na.at(1) == ee.at(1)){
-            foelist.at(i) = NULL;
+            it = foelist.erase(it);
             break;
+        }else{
+            ++it;
         }
     }    
 }
 
 void grid::removepotion(potion* p){
-    for (int i = 0; i < 10;i++){
-        vector <int> na = potionlist.at(i)->getpoint(); 
+    std::vector<potion*>::iterator it;
+    for (it = potionlist.begin(); it != potionlist.end();){
+        vector <int> na = (*it)->getpoint(); 
         vector <int> pp = p->getpoint();
         if (na.at(0) == pp.at(0) && na.at(1) == pp.at(1)){
-            potionlist.at(i) = NULL;
+            it = potionlist.erase(it);
             break;
+        }else{
+            ++it;
         }
     }    
 }
@@ -199,8 +205,6 @@ char grid::selectplayer()
 
 void grid::generateboard(char race, std::string file)
 {
-    cout << "entered generate board" << endl;
-    cout << theDisplay[0][0] << endl;
     this->generatechambers();
     this->createplayer(race);
     this->generatestair();
@@ -210,13 +214,21 @@ void grid::generateboard(char race, std::string file)
     this->generate_foelist();
     this->generate_potionlist();
     this->generate_treaslist();
+    //attack notifications from nearby enemies
+    for (int y = 0; y < 20; y++)
+    {
+        enemy *foe = foelist.at(y);
+        if (foe != NULL && controller->withinradius(foe)){
+            controller->attacknotification(foe);
+            cout << "attack notification from " << foe->getidentity() << " to kill player" << endl;
+        }
+    }
 }
 
 void grid::generatechambers()
 {
     for (int i = 0; i < 5; i++)
     {
-        cout <<"entered generate chamber loop"<<endl;
         chambers[i] = new chamber(i, theDisplay);
     }
 }
@@ -241,27 +253,21 @@ player *grid::generateplayer(char race, std::vector<int> r)
 
 void grid::createplayer(char race)
 {
-    cout << "create player started" << endl;
     int num = rand() % 5;
     std::vector<int> cor = chambers[num]->generatePos('@');
     controller = generateplayer(race, cor);
     std::vector<int> p = controller->getpoint();
-    cout << "Player in chamber" << num << "at point" << p.at(0) << p.at(1) << endl;
 }
 
 void grid::generatestair()
 {
-    cout << "I started generating stair" << endl;
     int a = rand() % 5;
     std::vector<int> p = controller->getpoint();
     while (chambers[a]->withinRange(p.at(0), p.at(1)))
     {
         a = rand() % 5;
     }
-    cout << "found index of chamber where player is not" << endl;
     std::vector<int> w = chambers[a]->generatePos('/');
-    cout << "point generated" << endl;
-    cout << "stair generated" << w.at(0) << w.at(1) << endl;
 }
 
 void grid::generateenemies()
@@ -278,13 +284,13 @@ void grid::generateenemies()
             std::vector<int> random = chambers[c]->generatePos('V');
             foes[i] = new vampire(random);
         }else if (race >= 7 && race < 12){
-            std::vector<int> random = chambers[c]->generatePos('G');
+            std::vector<int> random = chambers[c]->generatePos('N');
             foes[i] = new goblin(random);
         }else if (race >= 12 && race < 14){
             std::vector<int> random = chambers[c]->generatePos('T');
             foes[i] = new troll(random);
         }else if (race >= 14 && race < 16){
-            std::vector<int> random = chambers[c]->generatePos('P');
+            std::vector<int> random = chambers[c]->generatePos('X');
             foes[i] = new phoenix(random);
         }else{
             std::vector<int> random = chambers[c]->generatePos('M');
@@ -292,41 +298,32 @@ void grid::generateenemies()
         }
         //print the enemies in their points on the board
     }
-    cout << "generated all enemies" <<endl;
 }
 
 void grid::generatepotions()
 {
-    cout << "potions have started generating" << endl;
     for (int i = 0; i < 10; i++)
     {
-        cout << i << "potions made" << endl;
         int c = rand() % 5;
         int race = rand() % 6;
         std::vector<int> random = chambers[c]->generatePos('P');
         if (race == 0)
         {
-            cout << "RH generated" << endl;
             potionstore[i] = new RH(random);
         }else if (race == 1)
         {
-            cout << "BA generated" << endl;
             potionstore[i] = new BA(random);
         }else if (race == 2)
         {
-            cout << "BD generated" << endl;
             potionstore[i] = new BD(random);
         }else if (race == 3)
         {
-            cout << "PH generated" << endl;
             potionstore[i] = new PH(random);
         }else if(race == 4)
         {
-             cout << "WA generated" << endl;
             potionstore[i] = new WA(random);
         }else
         {
-            cout << "WD generated" << endl;
             potionstore[i] = new WD(random);
         }
         //print the enemies in their points on the board
@@ -343,14 +340,13 @@ void grid::generatetreasures()
         if (race >= 0 && race < 5)
         {
             goldchest[i] = new NH(random);
-            cout << "Normal Horde generated at" << random.at(0) << random.at(1) << endl;
         }else if (race == 5){
             goldchest[i] = new SH(random);
-            cout << "Small Horde generated at" << random.at(0) << random.at(1) << endl;
         }else
         {
+            std::vector<int> dragonLocation = chambers[c]->generatePos('D');
+            foes[i] = new dragon(dragonLocation);
             goldchest[i] = new DH(random);
-            cout << "Dragon Horde generated at" << random.at(0) << random.at(1) << endl;
         }
         //print the enemies in their points on the board
     }
@@ -411,24 +407,24 @@ void grid::moveplayer(string a)
 	      cout<<"The gold is guarded by the Dragon. You can't pick it." << endl; 
       }
     }
+
     theDisplay[prow][pcol] = preTile;
     controller->movePos(a);
     std::vector <int> newPos = controller->getpoint(); 
     theDisplay[newPos.at(0)][newPos.at(1)] = '@';
     preTile = temp;
     
-    int n = controller->get_num_attk();
-    for(int i = 0; i < n; i++){
-        enemy *enu = controller->attackers[i];
-        if (!controller->withinradius(enu)){
-            controller->removenotification(enu);
+    std::vector<enemy*>::iterator it1;
+    for(it1 = foelist.begin(); it1 != foelist.end();){
+        if (!controller->withinradius(*it1)){
+            controller->removenotification(*it1);
         }
+        ++it1;
     }
 }
 
 void grid::moveenemy(enemy *e)
 {
-    cout <<"move enemy entered" <<endl;
     int a;
     std::vector<int> r = e->getpoint();
     int x = r.at(0);
@@ -446,12 +442,11 @@ void grid::moveenemy(enemy *e)
                 std::vector<int> q = e->getpoint();
                 e->setpoint(p);
                 theDisplay[x][y+1] = theDisplay[x][y];
-                theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << " to the right" << endl;
-                if (e->withinradius(controller)){
+                theDisplay[q.at(0)][q.at(1)] =  '.'; 
+                if  (e->withinradius(controller)){
                     controller->attacknotification(e);
-                    cout << "attack notification from " << e->getidentity() << " to kill player" << endl;
-                }   
+                    cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
+                }
                 break;           
             }
              continue;
@@ -467,8 +462,7 @@ void grid::moveenemy(enemy *e)
                 e->setpoint(p);
                 theDisplay[x+1][y] = theDisplay[x][y];
                 theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << " down" << endl;
-                if (e->withinradius(controller)){
+                if  (e->withinradius(controller)){
                     controller->attacknotification(e);
                     cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
                 }
@@ -487,7 +481,6 @@ void grid::moveenemy(enemy *e)
                 e->setpoint(p);
                 theDisplay[x][y-1] = theDisplay[x][y];
                 theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << "to the left" << endl;
                 if  (e->withinradius(controller)){
                     controller->attacknotification(e);
                     cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
@@ -507,7 +500,6 @@ void grid::moveenemy(enemy *e)
                 e->setpoint(p);
                 theDisplay[x-1][y] = theDisplay[x][y];
                 theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << "up" << endl;
                 if  (e->withinradius(controller)){
                     controller->attacknotification(e);
                     cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
@@ -527,10 +519,9 @@ void grid::moveenemy(enemy *e)
                 e->setpoint(p);
                 theDisplay[x+1][y+1] = theDisplay[x][y];
                 theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << "downwards right" << endl;
                 if  (e->withinradius(controller)){
                     controller->attacknotification(e);
-                    cout << "attack notification from " << e->getidentity() << "to kill player" << endl;    
+                    cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
                 }
                 break;
             } 
@@ -547,7 +538,6 @@ void grid::moveenemy(enemy *e)
                 e->setpoint(p);
                 theDisplay[x-1][y+1] = theDisplay[x][y];
                 theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << "upwards right" << endl;
                 if  (e->withinradius(controller)){
                     controller->attacknotification(e);
                     cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
@@ -567,7 +557,6 @@ void grid::moveenemy(enemy *e)
                 e->setpoint(p);
                 theDisplay[x-1][y-1] = theDisplay[x][y];
                 theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << "upwards left" << endl;
                 if  (e->withinradius(controller)){
                     controller->attacknotification(e);
                     cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
@@ -587,7 +576,6 @@ void grid::moveenemy(enemy *e)
                 e->setpoint(p);
                 theDisplay[x+1][y-1] = theDisplay[x][y];
                 theDisplay[q.at(0)][q.at(1)] =  '.';
-                cout << "move " << e->getidentity() << "downwards left" << endl;
                 if  (e->withinradius(controller)){
                     controller->attacknotification(e);
                     cout << "attack notification from " << e->getidentity() << "to kill player" << endl;
@@ -601,14 +589,12 @@ void grid::moveenemy(enemy *e)
 
 void grid::moveenemies()
 {
-    cout << "move enemies entered" << endl;
-    for (int y = 0; y < 20; y++)
+    std::vector<enemy*>::iterator it;
+    for (it = foelist.begin(); it != foelist.end();)
     {
-        if (foelist.at(y) != NULL){
-            this->moveenemy(foelist.at(y));
-        }
+        this->moveenemy(*it);
+        ++it;
     }
-    cout << "all enemies moved" << endl;
 }
 
 void grid::turnmerchant()
@@ -630,66 +616,73 @@ void quitfloor() {
 
 void grid::attackbyplayer(){
     string dir;
-    int numattk = controller->get_num_attk();
-    while (numattk > 0){
+    while (true){
         cout << "Enter direction" <<endl;
         cin >> dir;
         vector <int> pos = controller->getpoint();
         if (dir == "no"){
-             pos.at(1) -= 1;     
+             pos[0] -= 1;     
         } 
         else if (dir == "we"){
-             pos.at(0) -= 1;     
+             pos[1] -= 1;     
         } 
         else if (dir == "ea"){
-            pos.at(0) += 1;     
+            pos[1] += 1;  
+            cout << "Entered east" <<endl;   
         } 
         else if (dir == "so"){
-            pos.at(1) += 1;    
+            pos[0] += 1;    
         } 
         else if (dir == "nw"){
-            pos.at(0) -= 1;
-            pos.at(1) -= 1;     
+            pos[0] -= 1;
+            pos[1] -= 1;     
         } 
         else if (dir == "ne"){
-            pos.at(0) += 1;
-            pos.at(1) -= 1;     
+            pos[0] -= 1;
+            pos[1] += 1;     
         } 
         else if (dir == "sw"){
-            pos.at(0) -= 1;
-            pos.at(1) += 1;     
+            pos[0] += 1;
+            pos[1] -= 1;     
         } 
         else if (dir == "se"){
-            pos.at(0) += 1;
-            pos.at(1) += 1;     
+            pos[0] += 1;
+            pos[1] += 1;     
         }
         else{
             continue;
         } 
-
-        for (int i = 0; i < controller->num_attackers; i++){
-            enemy *en = controller->attackers[i];
-            vector <int> apos = en->getpoint();
+        enemy *en = NULL;
+        std::vector<enemy*>::iterator it;
+        for (it = controller->attackers.begin(); it != controller->attackers.end();){
+            vector <int> apos = (*it)->getpoint();
             if (apos.at(0) == pos.at(0) && apos.at(1) == pos.at(1)){
-                controller->attack(en);
-                en->attack(controller);
-                int enemyhp = en->gethp();
-                int controllerhp = controller->gethp();
-                if(controllerhp == 0){
-                    numattk = 0;
-                    dead = true;
-                    break;    
-                }   
-                if(enemyhp == 0){
-                     theDisplay[apos.at(0)][apos.at(1)] = '.';
-                    controller->num_attk_minus();
-                    this->removefoe(en);
-                    numattk = controller->get_num_attk();
-                    break;
-                }
+                en = *it;
+                break;
+            }else{
+                ++it;
             }
         }
-            
+        if (en != NULL){
+            controller->attack(en);
+            en->attack(controller);
+            int enemyhp = en->gethp();
+            int controllerhp = controller->gethp();
+            if(controllerhp == 0){
+                dead = true;
+                break;    
+            }   
+            if(enemyhp == 0){
+                vector <int> enemypos = en->getpoint();
+                vector <int> pos = controller->getpoint();
+                theDisplay[pos.at(0)][pos.at(1)] = preTile;
+                controller->setpoint(enemypos);
+                theDisplay[enemypos.at(0)][enemypos.at(1)] = '@';
+                controller->removenotification(en);
+                this->removefoe(en);
+                break;
+            }
+        }
     }
     return;
 }
@@ -697,110 +690,56 @@ void grid::attackbyplayer(){
 void grid::potionpick(string dir){
     vector<int> cpoint = controller->getpoint();
     vector<int> point = cpoint;
-    for (int i = 0; i<10; i++){
-        if (dir == "no"){
-            cpoint.at(1) -= 1;
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }
-        }
-        else if (dir == "we"){
-            cpoint.at(0) -= 1;   
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }  
-        } 
-        else if (dir == "ea"){
-            cpoint.at(0) += 1;  
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }   
-        } 
-        else if (dir == "so"){
-            cpoint.at(1) += 1;    
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }
-        } 
-        else if (dir == "nw"){
-            cpoint.at(0) -= 1;
-            cpoint.at(1) -= 1;
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }
-        } 
-        else if (dir == "ne"){
-            cpoint.at(0) += 1;
-            cpoint.at(1) -= 1;
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }
-        } 
-        else if (dir == "sw"){
-            cpoint.at(0) -= 1;
-            cpoint.at(1) += 1;
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }
-        } 
-        else if (dir == "se"){
-            cpoint.at(0) += 1;
-            cpoint.at(1) += 1;
-            bool t = potionstore[i]->potionlocation(cpoint);
-            if (t){
-                theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
-                controller->setpoint(cpoint);
-                theDisplay[point.at(0)][point.at(1)] =  '.';
-                this->removepotion(potionstore[i]);
-                break;
-            }
-        }
-        else{
-            cout << "Enter correct direction" <<endl;
+    std::vector<potion*>::iterator it;
+    if (dir == "no"){
+        cpoint[0] -= 1;
+    }
+    else if (dir == "we"){
+        cpoint[1] -= 1;
+    } 
+    else if (dir == "ea"){
+        cpoint[1] += 1; 
+    } 
+    else if (dir == "so"){
+        cpoint[0] += 1;    
+    } 
+    else if (dir == "nw"){
+        cpoint[0] -= 1;
+        cpoint[1] -= 1;
+    } 
+    else if (dir == "ne"){
+        cpoint[0] -= 1;
+        cpoint[1] += 1;
+    } 
+    else if (dir == "sw"){
+        cpoint[0] += 1;
+        cpoint[1] -= 1;
+    } 
+    else if (dir == "se"){
+        cpoint[0] += 1;
+        cpoint[1] += 1;
+    }
+    else{
+        cout << "Enter correct direction" <<endl;
+    }
+    for (it = potionlist.begin(); it != potionlist.end();){
+        bool t = (*it)->potionlocation(cpoint);
+        if (t) {
+            theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
+            controller->setpoint(cpoint);
+            theDisplay[point.at(0)][point.at(1)] =  '.';
+            this->removepotion(*it);
+            cout << "potion picked" <<endl;
             break;
+        } else{
+            ++it;
         }
     }
-    cout << "potion picked" <<endl;
 }
 
 bool grid::isValid(string direction){
     return(checkPoint(direction,'.')||checkPoint(direction, '+')
-           ||checkPoint(direction, '#')); // only include pickable gold
+           ||checkPoint(direction, '#')||checkPoint(direction, 'G')); // only include pickable gold
 }
 
 bool grid::checkPoint(string direction, char c) {
@@ -808,8 +747,6 @@ bool grid::checkPoint(string direction, char c) {
   if (c == theDisplay[pos.front()][pos.back()]) return true;
   return false;
 }
-
-
 
 void grid::goldpick(string dir){
 

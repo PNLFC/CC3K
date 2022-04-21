@@ -6,7 +6,6 @@
 //  Copyright (c) 2015 Reel. All rights reserved.
 //
 
-
 #include "grid.h"
 #include <iostream>
 #include <string>
@@ -63,12 +62,17 @@ int main(int argc, char *argv[]) {
         if(d[0] == 'a' ){
             d.erase(0, 1);
             floor->attackbyplayer();
+            floor->print();
+            cin >> d;
         }
         if(d[0] == 'u'){
             d.erase(0, 1);
             cout << "Enter direction" << endl;
             cin >> d;
             floor->potionpick(d);
+            d.erase(0,2);
+            floor->print();
+            cin >> d;
         }
         //player moving through floor    
         while (!(d == "no" || d == "so" || d == "ea" || d == "we"
@@ -76,23 +80,20 @@ int main(int argc, char *argv[]) {
             cin.clear();
             cout << "Enter a valid command: ";
             cin >> d;
-            if(d[0] == 'a' ) {
+            if(d[0] == 'a') {
                 d.erase(0, 1);
                 cout << "Enter direction" << endl;
                 floor->attackbyplayer();
-                d.erase(0,2);
             }
             else if (d[0] == 'u'){
                 d.erase(0, 1);
                 cout << "Enter direction" << endl;
                 cin >> d;
                 floor->potionpick(d);
-                d.erase(0,2);
             }
         }
         if (floor->isValid(d)){
             floor->moveplayer(d);
-            cout << "player moved" << endl;
             floor->moveenemies();
         }
         

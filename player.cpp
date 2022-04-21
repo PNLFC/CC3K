@@ -15,7 +15,7 @@
 #include <list>
 
 
-player::player(std::vector<int> p, char sym, char t, std::string i,int hp, int atk, int def,int max,int goldn,int floor):character(p,sym,t,i,hp,atk,def,max),gold(goldn),floor(floor),num_attackers(0){
+player::player(std::vector<int> p, char sym, char t, std::string i,int hp, int atk, int def,int max,int goldn,int floor):character(p,sym,t,i,hp,atk,def,max),gold(goldn),floor(floor){
     std::vector<enemy*> attackers;
 }
 
@@ -23,18 +23,10 @@ player::~player(){
 
 }
 
-
 int player::getfloor(){
     return floor;
 }
 
-int player::get_num_attk(){
-    return num_attackers;
-}
-
-void player::num_attk_minus(){
-    num_attackers -= 1;
-}
 void player::mutatefloor(int flor){
     floor = flor;
 }
@@ -77,13 +69,14 @@ void player::mutatemuthp(int hp){
 
 void player::attack(enemy *e){
     float num = this->getatk();
-    int m = ceilf(100/(100 + e->getdef()) * num);
-    e->mutatehp(-m);
+    float m = ceilf((100/(float)(100 + e->getdef())) * num);
+    int decrease = static_cast<int>(m);
+    std::cout << "Enemy HP decreased by " << decrease << std::endl;
+    e->mutatehp(-decrease);
 }
 
 void player::attacknotification(enemy *e){
     attackers.push_back(e);
-    num_attackers += 1;
 }
 
 void player::removenotification(enemy *e){
@@ -92,7 +85,6 @@ void player::removenotification(enemy *e){
         std::vector <int> na = (*it)->getpoint(); 
         std::vector <int> ee = e->getpoint();
         if (na.at(0) == ee.at(0) && na.at(1) == ee.at(1)){
-            num_attackers -= 1;
             it = attackers.erase(it);
         }
         else{

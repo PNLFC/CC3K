@@ -28,6 +28,7 @@ void enemy::settreasure(treasure *gold){
 
 void enemy::attack(player *p){
     float num = this->getatk();
-    int m = ceilf(100/(100 + p->getdef()) * num);
-    p->mutatehp(-m);
+    float m = ceilf((100/(float)(100 + p->getdef())) * num);
+    int decrease = static_cast<int>(m);
+    p->mutatehp(-decrease);
 }

@@ -34,7 +34,7 @@ public:
     potion **potionstore;
     treasure **goldchest;
     std::vector<DH *> dragons;
-    char preTile; //the tile the Player stand on last time
+    char preTile; //the tile the Player stood on the last time
     
     bool dead;
 

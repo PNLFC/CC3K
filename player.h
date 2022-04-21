@@ -35,9 +35,6 @@ public:
     ~player();
     int getfloor();
     std::vector<enemy*> attackers;
-    int num_attackers;
-    int get_num_attk();
-    void num_attk_minus();
     void mutatefloor(int flor);
     int getgold();
     void mutategold(int gld);
