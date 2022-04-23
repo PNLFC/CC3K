@@ -19,6 +19,7 @@ class treasure;
 class potion;
 class chamber;
 class DH;
+class dragon;
 
 using namespace std;
 
@@ -33,7 +34,7 @@ public:
     enemy **foes;
     potion **potionstore;
     treasure **goldchest;
-    std::vector<DH *> dragons;
+    
     char preTile; //the tile the Player stood on the last time
     
     bool dead;
@@ -41,6 +42,7 @@ public:
     std::vector <enemy*> foelist;
     std::vector <potion*> potionlist;
     std::vector <treasure*> treaslist;
+    std::vector <dragon*> dragons;
 
     chamber **chambers;
 
@@ -55,18 +57,19 @@ public:
     grid(string file);
     ~grid();
     bool isValid(std::string direction);
+    bool isNextFloor(std::string direction);
     bool checkPoint(std::string direction, char c);
     void print();
     bool won();
-    char selectplayer();
     void startagain();
     void changepointinboard(std::vector<int> p, char c);
-    void generateboard(char race, string file); //need to still generate dragons
-    void cleanboard(); //implement moving to the next floor
-    void createplayer(char race);
-    player *generateplayer(char race, std::vector<int> r);
+    void generateboard(); //need to still generate dragons
+    void cleanboard();
+    void nextboard();
+    void setController(player *p);
+    void generatedragonposition(std::vector<int> p);
+    std::vector<int> createplayerposition();
     void generatechambers();
-    void generatestair();
     void generateenemies();
     void generatepotions();
     void generatetreasures();

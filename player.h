@@ -45,6 +45,7 @@ public:
     void attacknotification(enemy *e);
     void removenotification(enemy *e);
     void movePos(std::string direction);
+    void eraseAllNotifications();
     };
 
 

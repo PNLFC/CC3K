@@ -93,6 +93,13 @@ void player::removenotification(enemy *e){
     }    
 }
 
+void player::eraseAllNotifications(){
+    std::vector<enemy*>::iterator it;
+    for (it = attackers.begin(); it != attackers.end();){
+        it = attackers.erase(it);
+    }
+}
+
 void player::movePos(std::string direction){
     std::vector <int> curPos = this->getpoint();
     std::vector <int> newPos;

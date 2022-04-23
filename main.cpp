@@ -7,6 +7,11 @@
 //
 
 #include "grid.h"
+#include "player.h"
+#include "human.h"
+#include "elf.h"
+#include "orc.h"
+#include "dwarf.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -36,6 +41,38 @@ void quit() {
     Go get better and come back next time." << endl;
 }
 
+char selectplayer()
+{
+    char p;
+    cout << "Please select a race: " << endl;
+    cout << "   human: 'h', orc: 'o', elf: 'e', dwarf " << endl;
+    cin >> p;
+    while (p != 'h' && p != 'o' && p != 'e' && p != 'd')
+    {
+        cout << "Bad Selection. Try again" << endl;
+        cin >> p;
+    }
+    return p;
+}
+
+player *generateplayer(char race, std::vector<int> r)
+{
+    switch (race)
+    {
+    case 'h':
+        return new human(r);
+    case 'e':
+        return new elf(r);
+    case 'o':
+        return new orc(r);
+    case 'd':
+        return new dwarf(r);
+    default:
+        cerr << "Wrong input";
+        return NULL;
+    }
+}
+
 int main(int argc, char *argv[]) {
     string file;
     if (argc == 2) {
@@ -48,63 +85,90 @@ int main(int argc, char *argv[]) {
     srand(static_cast<unsigned int> (time(NULL)));  //  using the time seed from srand
     passage();
     grid *floor = new grid(file);
-    char race = floor->selectplayer();
-    floor->generateboard(race,file);
+    char race = selectplayer();
+    cout <<"before generate board" << endl;
+    floor->generateboard();
+    cout <<"generated board" << endl;
+    std::vector<int> position = floor->createplayerposition();
+    player *controller = generateplayer(race, position);
+    cout <<"generated player" <<endl;
+    floor->setController(controller);
+    cout << "set controller" <<endl;
     floor->print();
     
     string d;
     cin >> d;
-    while(!cin.eof()) {
-        if (d == "q") {
-            quit();
-            break;
-        }
-        if(d[0] == 'a' ){
-            d.erase(0, 1);
-            floor->attackbyplayer();
-            floor->print();
-            cin >> d;
-        }
-        if(d[0] == 'u'){
-            d.erase(0, 1);
-            cout << "Enter direction" << endl;
-            cin >> d;
-            floor->potionpick(d);
-            d.erase(0,2);
-            floor->print();
-            cin >> d;
-        }
-        //player moving through floor    
-        while (!(d == "no" || d == "so" || d == "ea" || d == "we"
-                 || d == "ne" || d == "se" || d == "nw" || d == "sw" || d == "r")) {
-            cin.clear();
-            cout << "Enter a valid command: ";
-            cin >> d;
-            if(d[0] == 'a') {
-                d.erase(0, 1);
-                cout << "Enter direction" << endl;
-                floor->attackbyplayer();
+    while(controller->getfloor() != 5){
+        cout << controller->getfloor() << "floor" <<endl;
+        while(!cin.eof()) {
+            if (d == "q") {
+                break;
             }
-            else if (d[0] == 'u'){
+            if(d == "a" && !controller->attackers.empty()){
+                d.erase(0, 1);
+                floor->attackbyplayer();
+                floor->print();
+                cin >> d;
+            }
+            if(d == "u"){
                 d.erase(0, 1);
                 cout << "Enter direction" << endl;
                 cin >> d;
                 floor->potionpick(d);
+                d.erase(0,2);
+                floor->print();
+                cin >> d;
             }
+            //player moving through floor    
+            while (!(d == "no" || d == "so" || d == "ea" || d == "we"
+                    || d == "ne" || d == "se" || d == "nw" || d == "sw" || d == "r")) {
+                cin.clear();
+                cout << "Enter a valid command: ";
+                cin >> d;
+                if(d == "a") {
+                    d.erase(0, 1);
+                    cout << "Enter direction" << endl;
+                    floor->attackbyplayer();
+                }
+                else if (d == "u"){
+                    d.erase(0, 1);
+                    cout << "Enter direction" << endl;
+                    cin >> d;
+                    floor->potionpick(d);
+                }
+            }
+
+            if(floor->isNextFloor(d)){
+                controller->eraseAllNotifications();
+                delete floor;
+                break;
+            }
+
+            if (floor->isValid(d)){
+                floor->moveplayer(d);
+                floor->moveenemies();
+            }
+            
+            floor->print();
+            cin >> d;
         }
-        if (floor->isValid(d)){
-            floor->moveplayer(d);
-            floor->moveenemies();
-        }
-        
-        if(floor->won()) {
-            win();
+        if (d == "q") {
+            quit();
             break;
         }
+        floor = new grid(file);
+        floor->generateboard();
+        position = floor->createplayerposition();
+        controller->setpoint(position);
+        floor->setController(controller);
         floor->print();
+        d.erase(0,2);
         cin >> d;
     }
-    
+    if (d != "q") {
+        win();
+    }
+    delete controller;
     delete floor;
     return 0;
 }

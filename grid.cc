@@ -10,10 +10,10 @@
 #include <sstream>
 #include <fstream>
 #include <cstdlib>
+#include <stdlib.h>
 #include <time.h>
 #include "chamber.h"
 #include "grid.h"
-#include "player.h"
 #include "enemy.h"
 #include "potion.h"
 #include "vampire.h"
@@ -24,10 +24,6 @@
 #include "merchant.h"
 #include "dragon.h"
 #include "treasure.h"
-#include "human.h"
-#include "elf.h"
-#include "orc.h"
-#include "dwarf.h"
 #include "player.h"
 #include "RH.h"
 #include "BA.h"
@@ -55,8 +51,9 @@ grid::grid(string file) : file(file)
     {
         vector <char> row;
         int len = (int)line.length();
+        row.reserve(len);
         for(int i = 0; i < len; ++i){
-            row.push_back(line[i]);
+            row.emplace_back(line[i]);
         }
         theDisplay.push_back(row);
     }
@@ -70,10 +67,6 @@ grid::~grid()
     delete[] potionstore;
     delete[] goldchest;
     delete[] foes;
-    if (controller != NULL)
-    {
-        delete controller;
-    }
 }
 
 void grid::cleanboard()
@@ -106,14 +99,14 @@ void grid::cleanboard()
 
 
 void grid::generate_foelist(){
-    for (int i = 0; i < 20;i++){
+    for (int i = 0; i < 20; i++){
         enemy *e = foes[i];
         foelist.push_back(e);
     }
 }
 
 void grid::generate_potionlist(){
-    for (int i = 0; i < 10;i++){
+    for (int i = 0; i < 10; i++){
         potion *p = potionstore[i];
         potionlist.push_back(p);
     }
@@ -165,8 +158,6 @@ void grid::removetreas(treasure* t){
     }    
 }
 
-
-
 void grid::print()
 {
     for (int i = 0; i < 25; i++)
@@ -189,25 +180,10 @@ bool grid::won()
     return false;
 }
 
-char grid::selectplayer()
-{
-    char p;
-    cout << "Please select a race: " << endl;
-    cout << "   human: 'h', orc: 'o', elf: 'e', dwarf " << endl;
-    cin >> p;
-    while (p != 'h' && p != 'o' && p != 'e' && p != 'd')
-    {
-        cout << "Bad Selection. Try again" << endl;
-        cin >> p;
-    }
-    return p;
-}
 
-void grid::generateboard(char race, std::string file)
+void grid::generateboard()
 {
     this->generatechambers();
-    this->createplayer(race);
-    this->generatestair();
     this->generatepotions();
     this->generatetreasures();
     this->generateenemies();
@@ -215,9 +191,32 @@ void grid::generateboard(char race, std::string file)
     this->generate_potionlist();
     this->generate_treaslist();
     //attack notifications from nearby enemies
+}
+
+void grid::nextboard()
+{
+    cout << "generate next board" << endl;
+    this->cleanboard();
+    cout << "cleaned board" << endl;
+    this->generatechambers();
+    cout << "generate chambers complete" << endl;
+    this->generatepotions();
+    cout << "generate potions complete" << endl;
+    this->generatetreasures();
+    cout << "generate treasure complete" << endl;
+    this->generateenemies();
+    cout << "generate enemies complete" << endl;
+    this->generate_foelist();
+    cout << "generate foelist complete" << endl;
+    this->generate_potionlist();
+    cout << "generate potionlist complete" << endl;
+    this->generate_treaslist();
+    cout << "generate treasurelist complete" << endl;
+    // attack notifications from nearby enemies
     for (int y = 0; y < 20; y++)
     {
         enemy *foe = foelist.at(y);
+        cout << foe->getidentity() << "identity";
         if (foe != NULL && controller->withinradius(foe)){
             controller->attacknotification(foe);
             cout << "attack notification from " << foe->getidentity() << " to kill player" << endl;
@@ -233,42 +232,34 @@ void grid::generatechambers()
     }
 }
 
-player *grid::generateplayer(char race, std::vector<int> r)
-{
-    switch (race)
-    {
-    case 'h':
-        return new human(r);
-    case 'e':
-        return new elf(r);
-    case 'o':
-        return new orc(r);
-    case 'd':
-        return new dwarf(r);
-    default:
-        cerr << "Wrong input";
-        return NULL;
-    }
-}
 
-void grid::createplayer(char race)
+std::vector<int> grid::createplayerposition()
 {
     int num = rand() % 5;
-    std::vector<int> cor = chambers[num]->generatePos('@');
-    controller = generateplayer(race, cor);
-    std::vector<int> p = controller->getpoint();
+    std::vector<int> cor = chambers[num]->addtochamber('@');
+    return cor;
 }
 
-void grid::generatestair()
+void grid::setController(player *p)
 {
+    controller = p;
     int a = rand() % 5;
-    std::vector<int> p = controller->getpoint();
-    while (chambers[a]->withinRange(p.at(0), p.at(1)))
+    std::vector<int> point = controller->getpoint();
+    while (chambers[a]->withinRange(point.at(0), point.at(1)))
     {
         a = rand() % 5;
     }
-    std::vector<int> w = chambers[a]->generatePos('/');
+    chambers[a]->addtochamber('/');
+    for (int y = 0; y < 20; y++)
+    {
+        enemy *foe = foelist.at(y);
+        if (foe != NULL && controller->withinradius(foe)){
+            controller->attacknotification(foe);
+            cout << "attack notification from " << foe->getidentity() << " to kill player" << endl;
+        }
+    }
 }
+
 
 void grid::generateenemies()
 {
@@ -278,22 +269,22 @@ void grid::generateenemies()
         int race = rand() % 18;
         if(race >= 0 && race < 4)
         {
-            std::vector<int> random = chambers[c]->generatePos('W');
+            std::vector<int> random = chambers[c]->addtochamber('W');
             foes[i] = new werewolf(random);
         }else if (race >= 4 && race < 7){
-            std::vector<int> random = chambers[c]->generatePos('V');
+            std::vector<int> random = chambers[c]->addtochamber('V');
             foes[i] = new vampire(random);
         }else if (race >= 7 && race < 12){
-            std::vector<int> random = chambers[c]->generatePos('N');
+            std::vector<int> random = chambers[c]->addtochamber('N');
             foes[i] = new goblin(random);
         }else if (race >= 12 && race < 14){
-            std::vector<int> random = chambers[c]->generatePos('T');
+            std::vector<int> random = chambers[c]->addtochamber('T');
             foes[i] = new troll(random);
         }else if (race >= 14 && race < 16){
-            std::vector<int> random = chambers[c]->generatePos('X');
+            std::vector<int> random = chambers[c]->addtochamber('X');
             foes[i] = new phoenix(random);
         }else{
-            std::vector<int> random = chambers[c]->generatePos('M');
+            std::vector<int> random = chambers[c]->addtochamber('M');
             foes[i] = new merchant(random);
         }
         //print the enemies in their points on the board
@@ -306,7 +297,7 @@ void grid::generatepotions()
     {
         int c = rand() % 5;
         int race = rand() % 6;
-        std::vector<int> random = chambers[c]->generatePos('P');
+        std::vector<int> random = chambers[c]->addtochamber('P');
         if (race == 0)
         {
             potionstore[i] = new RH(random);
@@ -336,21 +327,44 @@ void grid::generatetreasures()
     {
         int c = rand() % 5;
         int race = rand() % 8;
-        std::vector<int> random = chambers[c]->generatePos('G');
         if (race >= 0 && race < 5)
         {
+            std::vector<int> random = chambers[c]->addtochamber('G');
             goldchest[i] = new NH(random);
         }else if (race == 5){
+            std::vector<int> random = chambers[c]->addtochamber('G');
             goldchest[i] = new SH(random);
         }else
         {
-            std::vector<int> dragonLocation = chambers[c]->generatePos('D');
-            foes[i] = new dragon(dragonLocation);
+            std::vector<int> dragonLocation;
+            std::vector<int> random;
+            dragonLocation.reserve(2);
+            while(dragonLocation.empty()){
+                random = chambers[c]->generatePos();
+                for (int i = 0; i < 9; ++i){
+                    if (i == 4) continue;
+                    div_t divresult = div (i,3); 
+                    int x = divresult.quot - 1 + random.at(0);
+                    int y = divresult.rem - 1 + random.at(1);
+                    if (theDisplay[x][y] == '.'){
+                        dragonLocation.emplace_back(x);
+                        dragonLocation.emplace_back(y);
+                        break;
+                    }
+                }
+            }
+            theDisplay[random.at(0)][random.at(1)] = 'G';
+            cout << random.at(0) << random.at(1) << " dragon horde" << endl;
+            theDisplay[dragonLocation.at(0)][dragonLocation.at(1)] = 'D';
+            cout << dragonLocation.at(0) << dragonLocation.at(1) << " dragon" << endl;
             goldchest[i] = new DH(random);
+            dragon* d = new dragon(dragonLocation);
+            dragons.push_back(d);
         }
         //print the enemies in their points on the board
     }
 }
+
 
 vector<int> grid::nextStep(string direction) { //I AM A HELPER
     std::vector<int> r = controller->getpoint();
@@ -429,7 +443,7 @@ void grid::moveenemy(enemy *e)
     std::vector<int> r = e->getpoint();
     int x = r.at(0);
     int y = r.at(1);
-    while (true)
+    for(int i = 0; i < 5; ++i)
     {
         a = rand() % 8;
         if (a == 0)
@@ -590,10 +604,18 @@ void grid::moveenemy(enemy *e)
 void grid::moveenemies()
 {
     std::vector<enemy*>::iterator it;
+    std::vector<dragon*>::iterator dt;
     for (it = foelist.begin(); it != foelist.end();)
     {
         this->moveenemy(*it);
         ++it;
+    }
+    for(dt = dragons.begin(); dt != dragons.end();){
+        if  ((*dt)->withinradius(controller)){
+            controller->attacknotification(*dt);
+            cout << "attack notification from " << (*dt)->getidentity() << "to kill player" << endl;
+        }
+        ++dt;
     }
 }
 
@@ -616,7 +638,7 @@ void quitfloor() {
 
 void grid::attackbyplayer(){
     string dir;
-    while (true){
+    while (!controller->attackers.empty()){
         cout << "Enter direction" <<endl;
         cin >> dir;
         vector <int> pos = controller->getpoint();
@@ -628,7 +650,6 @@ void grid::attackbyplayer(){
         } 
         else if (dir == "ea"){
             pos[1] += 1;  
-            cout << "Entered east" <<endl;   
         } 
         else if (dir == "so"){
             pos[0] += 1;    
@@ -727,7 +748,7 @@ void grid::potionpick(string dir){
         if (t) {
             theDisplay[cpoint.at(0)][cpoint.at(1)] = '@';
             controller->setpoint(cpoint);
-            theDisplay[point.at(0)][point.at(1)] =  '.';
+            theDisplay[point.at(0)][point.at(1)] =  preTile;
             this->removepotion(*it);
             cout << "potion picked" <<endl;
             break;
@@ -739,7 +760,17 @@ void grid::potionpick(string dir){
 
 bool grid::isValid(string direction){
     return(checkPoint(direction,'.')||checkPoint(direction, '+')
-           ||checkPoint(direction, '#')||checkPoint(direction, 'G')); // only include pickable gold
+           ||checkPoint(direction, '#')||checkPoint(direction, 'G'));
+    // only include pickable gold
+}
+
+bool grid::isNextFloor(std::string direction){
+    bool isNextTile = checkPoint(direction,'/');
+    if (isNextTile){
+        int floorNum = controller->getfloor();
+        controller->mutatefloor(floorNum+1);
+    }
+    return isNextTile;
 }
 
 bool grid::checkPoint(string direction, char c) {

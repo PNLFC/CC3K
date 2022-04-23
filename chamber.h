@@ -30,7 +30,8 @@ public:
     int getcolLen();
     
     bool isValidTile(const int row,const int col);
-    std::vector<int> generatePos(const char symbol);
+    std::vector<int> generatePos();
+    std::vector<int> addtochamber(const char symbol);
     bool withinRange(const int row, const int col);
 
 };

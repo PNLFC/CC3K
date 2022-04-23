@@ -78,13 +78,26 @@ bool chamber::isValidTile(int row,int col) {
     else return false;    
 }
 
-vector<int> chamber::generatePos(const char symbol) {
+vector<int> chamber::generatePos() {
     vector<int> cor;
     int currRow, currCol;
     while (true) {
       currRow = rand() % rowLen;
       currCol = rand() % colLen;
         if (isValidTile(topRow+currRow, topCol+currCol)) break;
+    }
+    cor.push_back(topRow+currRow);
+    cor.push_back(topCol+currCol);
+    return cor;
+}
+
+vector<int> chamber::addtochamber(const char symbol) {
+    vector<int> cor;
+    int currRow, currCol;
+    while (true) {
+      currRow = rand() % rowLen;
+      currCol = rand() % colLen;
+      if (isValidTile(topRow+currRow, topCol+currCol)) break;
     }
     theDisplay[topRow+currRow][topCol+currCol] = symbol;
     cor.push_back(topRow+currRow);
@@ -96,7 +109,7 @@ bool chamber::withinRange(const int row, const int col) {
     if (id != 1 && id != 4) {
         if ((row >= topRow && row <= topRow+rowLen) && (col >= topCol && row <= topCol+colLen)) return true;
         else return false;
-    } else if (id == 2) {
+    } else if (id == 1) {
         if (col <= topCol+1) {
             if (row < topRow+23) return true;
             else return false;
