@@ -65,7 +65,6 @@ public:
     void changepointinboard(std::vector<int> p, char c);
     void generateboard(); //need to still generate dragons
     void cleanboard();
-    void nextboard();
     void setController(player *p);
     void generatedragonposition(std::vector<int> p);
     std::vector<int> createplayerposition();

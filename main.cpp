@@ -86,14 +86,10 @@ int main(int argc, char *argv[]) {
     passage();
     grid *floor = new grid(file);
     char race = selectplayer();
-    cout <<"before generate board" << endl;
     floor->generateboard();
-    cout <<"generated board" << endl;
     std::vector<int> position = floor->createplayerposition();
     player *controller = generateplayer(race, position);
-    cout <<"generated player" <<endl;
     floor->setController(controller);
-    cout << "set controller" <<endl;
     floor->print();
     
     string d;

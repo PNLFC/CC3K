@@ -193,37 +193,6 @@ void grid::generateboard()
     //attack notifications from nearby enemies
 }
 
-void grid::nextboard()
-{
-    cout << "generate next board" << endl;
-    this->cleanboard();
-    cout << "cleaned board" << endl;
-    this->generatechambers();
-    cout << "generate chambers complete" << endl;
-    this->generatepotions();
-    cout << "generate potions complete" << endl;
-    this->generatetreasures();
-    cout << "generate treasure complete" << endl;
-    this->generateenemies();
-    cout << "generate enemies complete" << endl;
-    this->generate_foelist();
-    cout << "generate foelist complete" << endl;
-    this->generate_potionlist();
-    cout << "generate potionlist complete" << endl;
-    this->generate_treaslist();
-    cout << "generate treasurelist complete" << endl;
-    // attack notifications from nearby enemies
-    for (int y = 0; y < 20; y++)
-    {
-        enemy *foe = foelist.at(y);
-        cout << foe->getidentity() << "identity";
-        if (foe != NULL && controller->withinradius(foe)){
-            controller->attacknotification(foe);
-            cout << "attack notification from " << foe->getidentity() << " to kill player" << endl;
-        }
-    }
-}
-
 void grid::generatechambers()
 {
     for (int i = 0; i < 5; i++)
